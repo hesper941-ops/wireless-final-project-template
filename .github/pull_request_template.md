@@ -3,6 +3,9 @@
 - Student ID:
 - Name:
 - GitHub username:
+- Fork repository URL:
+- Branch: main
+- PR number: GitHub will assign this after the Pull Request is created. You may leave it blank first and fill it in after creation.
 
 ## Checklist
 
