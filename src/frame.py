@@ -74,12 +74,17 @@ def parse_frame(frame_bits: list[int]) -> dict[str, object]:
 
     length_start = len(PREAMBLE_BITS)
     length_end = length_start + LENGTH_BITS
-    payload_end = len(bits) - CRC_BITS
+    length = bits_to_int(bits[length_start:length_end])
+    encoded_payload_end = length_end + length * 3
+    if encoded_payload_end + CRC_BITS <= len(bits):
+        payload_end = encoded_payload_end
+    else:
+        payload_end = len(bits) - CRC_BITS
     payload = bits[length_end:payload_end]
     checksum = bits_to_int(bits[payload_end : payload_end + CRC_BITS])
     return {
         "preamble": bits[: len(PREAMBLE_BITS)],
-        "length": bits_to_int(bits[length_start:length_end]),
+        "length": length,
         "payload": payload,
         "encoded_payload": payload,
         "checksum": checksum,
