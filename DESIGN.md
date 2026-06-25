@@ -800,3 +800,4 @@ This section should be updated after mock testing.
 |---|---|---|
 | v0.1 | Initial design using PN scrambling, repetition coding, QPSK, AWGN, and preamble synchronization | Satisfy baseline PRD requirements |
 | v0.2 | To be updated after mock tests | To be filled in `MOCK_TEST_REPORT.md` |
+| v0.3 | Implemented the full end-to-end baseline pipeline. The required command generated received.txt, metrics.json, and three plots. At SNR = 12 dB, AWGN, seed = 2026, received.txt matched Test.txt at byte level with BER = 0.0, FER = 0.0, text_match_rate = 1.0, and checksum_pass = true. | Verified that the baseline design satisfies the main public acceptance condition. |

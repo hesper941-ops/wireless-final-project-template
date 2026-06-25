@@ -26,7 +26,7 @@ The result of this stage is used to decide whether the selected baseline archite
 
 ## 2.1 Completed in Stage 1
 
-The following project skeleton and modules have been created:
+The following project skeleton and modules have beereated:
 
 ```text
 main.py
@@ -346,3 +346,56 @@ pytest tests -q
 This confirms that the basic module interfaces are ready for the next stage.
 
 However, the current project is still not the final communication system. The next step is to implement the complete end-to-end chain, generate `received.txt`, generate `metrics.json`, generate required plots, and verify exact file recovery under the required public baseline condition.
+
+---
+
+## 10. Stage-2 End-to-End Verification
+
+After the Stage-1 mock tests passed, the full end-to-end baseline pipeline was implemented and verified.
+
+Validation commands and results:
+
+```text
+pytest tests -q: 7 passed
+public core module tests: 9 passed
+required CLI command ran successfully
+```
+
+The required CLI command was:
+
+```bash
+python main.py --input Test.txt --output results/received.txt --snr 12 --seed 2026 --mod qpsk --channel awgn
+```
+
+End-to-end recovery result:
+
+```text
+results/received.txt matched Test.txt at byte level
+BER = 0.0
+FER = 0.0
+text_match_rate = 1.0
+checksum_pass = true
+```
+
+Generated files:
+
+```text
+results/received.txt
+results/metrics.json
+results/constellation.png
+results/ber_curve.png
+results/sync_peak.png
+```
+
+Low-SNR robustness:
+
+```text
+Low-SNR smoke test did not crash.
+When recovery fails, the program still writes output and records failure information in metrics.json.
+```
+
+Public tests note:
+
+Local `pytest public_tests -q` still has five remaining errors in this Windows execution environment. The errors occur when the public test fixture calls `shutil.rmtree(results)` and Windows denies deletion of `results/ber_curve.png`.
+
+This is a local filesystem permission issue during test cleanup, not a communication-chain recovery failure. The required CLI command runs successfully, and the recovered file matches `Test.txt` at byte level under the baseline SNR = 12 dB, AWGN, seed = 2026 condition.

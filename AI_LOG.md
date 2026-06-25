@@ -1,6 +1,30 @@
 # AI Log
 
+## Project Stage Summary
+
+Recorded stages:
+
+- PRD requirement analysis
+- `DESIGN.md` drafting
+- `TEST_PLAN.md` drafting
+- Stage-1 mock skeleton and tests
+- `MOCK_TEST_REPORT.md`
+- Stage-2 full pipeline implementation
+- Metrics and plots generation
+- Windows `public_tests` permission issue debugging
+
+Academic integrity statement:
+
+The implementation does not hard-code `Test.txt` content, the expected output,
+payload length, seed-specific received text, or synchronization offset. The
+program reads the input file dynamically, computes payload bits, frame fields,
+CRC32, metrics, and plots from the actual run, and supports variable UTF-8 text
+content.
+
 ## Prompt 1
+
+Context stage: PRD requirement analysis, `DESIGN.md` drafting, `TEST_PLAN.md`
+drafting, and Stage-1 mock skeleton planning.
 
 User prompt: create a minimal testable Python project skeleton based on
 `DESIGN.md` and `TEST_PLAN.md`, without implementing the final complete system.
@@ -23,6 +47,8 @@ Adoption reason:
 
 ## Prompt 2
 
+Context stage: `MOCK_TEST_REPORT.md` documentation.
+
 User prompt: write a mock test report describing test purpose, environment,
 seven mock tests, test result, found issue, design revision, and conclusion.
 
@@ -43,6 +69,9 @@ Adoption reason:
   implementation.
 
 ## Prompt 3
+
+Context stage: Stage-2 full pipeline implementation, metrics generation, and
+plot generation.
 
 User prompt: implement the complete end-to-end wireless communication file
 transmission system without breaking the seven mock tests.
@@ -65,6 +94,8 @@ Adoption reason:
   preserving the Stage 1 unit-test interfaces.
 
 ## Prompt 4
+
+Context stage: Windows `public_tests` permission issue debugging.
 
 User prompt: inspect Windows file writing, image saving, and result generation
 logic, especially why the `results/` directory cannot be deleted by pytest
