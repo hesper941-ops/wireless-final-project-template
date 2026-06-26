@@ -5,4 +5,5 @@ __pycache__/
 venv/
 env/
 .matplotlib-cache/
+.test_outputs/
 *.log

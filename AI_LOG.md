@@ -118,3 +118,39 @@ Adoption reason:
 
 - The buffer-based save path minimizes file-handle risk and makes result
   generation easier to reason about on Windows.
+
+## Prompt 5
+
+Context stage: Level 3 Rayleigh fading channel and one-tap equalization
+extension.
+
+User prompt: add a Level 3 extension with Rayleigh fading, known-channel
+one-tap equalization, comparison experiment support, tests, and documentation
+without breaking the AWGN baseline.
+
+AI-generated content:
+
+- Added Rayleigh fading channel and one-tap equalization helpers.
+- Added optional `--channel rayleigh` CLI support.
+- Added Rayleigh metrics fields including `equalization`, `fading_model`,
+  `rayleigh_enabled`, and `channel_estimation`.
+- Added `ber_curve_compare.png` generation for AWGN vs Rayleigh comparison.
+- Added Level 3 tests for Rayleigh reproducibility, equalization sanity, and
+  Rayleigh CLI smoke.
+- Kept final AWGN acceptance metrics in `results/metrics.json` and archived
+  Rayleigh extension metrics in `results/metrics_rayleigh.json`.
+- Added `EXPERIMENT_REPORT.md`.
+
+Manual changes and review:
+
+- Verified that the default AWGN command still recovered `Test.txt` at byte
+  level with BER = 0.0.
+- Verified that Rayleigh mode runs without crashing and records the actual
+  residual errors instead of forcing a correct result.
+- Confirmed again that no `Test.txt` content, output text, payload length, or
+  seed-specific received result was hard-coded.
+
+Adoption reason:
+
+- The extension adds a more realistic wireless channel experiment while keeping
+  the required baseline AWGN system unchanged.

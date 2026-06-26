@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .channel import add_prefix, awgn
+from .channel import add_prefix, awgn, one_tap_equalize, rayleigh_fading_channel
 from .channel_codec import repetition_decode, repetition_encode
 from .frame import build_frame, crc32_from_payload_bits, parse_frame
 from .metrics import build_metrics, write_metrics
@@ -35,8 +35,9 @@ def run_pipeline(
 ) -> dict[str, object]:
     if modulation.lower() != "qpsk":
         raise ValueError("only qpsk modulation is supported")
-    if channel.lower() != "awgn":
-        raise ValueError("only awgn channel is supported")
+    channel_name = channel.lower()
+    if channel_name not in {"awgn", "rayleigh"}:
+        raise ValueError("only awgn and rayleigh channels are supported")
 
     input_file = Path(input_path)
     output_file = ensure_parent_dir(output_path)
@@ -67,17 +68,43 @@ def run_pipeline(
 
     prefix_offset = _choose_prefix_offset(seed)
     prefixed_symbols = add_prefix(tx_symbols, offset_symbols=prefix_offset, seed=seed + 1000)
-    rx_symbols = awgn(prefixed_symbols, snr_db=snr_db, seed=seed + 2000)
+    metrics_extra: dict[str, object]
+    if channel_name == "rayleigh":
+        faded_symbols, fading_coefficients = rayleigh_fading_channel(
+            prefixed_symbols,
+            snr_db=snr_db,
+            seed=seed + 2000,
+        )
+        rx_symbols = one_tap_equalize(faded_symbols, fading_coefficients)
+        plot_symbols = rx_symbols
+        metrics_extra = {
+            "equalization": "one-tap",
+            "fading_model": "flat_rayleigh",
+            "rayleigh_enabled": True,
+            "channel_estimation": "known_h_simulation",
+            "comparison_note": "Rayleigh mode applies known-channel one-tap equalization before synchronization.",
+        }
+    else:
+        rx_symbols = awgn(prefixed_symbols, snr_db=snr_db, seed=seed + 2000)
+        plot_symbols = rx_symbols
+        metrics_extra = {
+            "equalization": "none",
+            "fading_model": None,
+            "rayleigh_enabled": False,
+            "channel_estimation": "not_applicable",
+        }
 
     try:
-        sync_result = detect_frame_start(rx_symbols, preamble=preamble_symbols())
+        preamble_ref = preamble_symbols()
+        sync_search_symbols = rx_symbols[: 129 + len(preamble_ref) - 1]
+        sync_result = detect_frame_start(sync_search_symbols, preamble=preamble_ref)
         sync_start_index = int(sync_result["start_index"])
         sync_peak_value = float(sync_result["peak_value"])
         sync_correlation = sync_result["correlation"]
 
         aligned_symbols = rx_symbols[sync_start_index : sync_start_index + len(tx_symbols)]
         demod_bits = qpsk_demodulate(aligned_symbols)[: len(frame_bits)]
-        parsed = parse_frame(demod_bits)
+        parsed = parse_frame(demod_bits, require_preamble=False)
         payload_length = int(parsed["length"])
         encoded_length = payload_length * 3
         encoded_rx = list(parsed["encoded_payload"])[:encoded_length]
@@ -105,7 +132,7 @@ def run_pipeline(
         snr_db=snr_db,
         seed=seed,
         modulation=modulation.lower(),
-        channel=channel.lower(),
+        channel=channel_name,
         original_bits=payload_bits,
         recovered_bits=recovered_bits,
         original_text=original_text,
@@ -117,6 +144,7 @@ def run_pipeline(
         crc_received=crc_received,
         sync_peak_value=sync_peak_value,
         failure_reason=failure_reason,
+        extra_fields=metrics_extra,
     )
     write_metrics(metrics, metrics_path)
 
@@ -125,7 +153,7 @@ def run_pipeline(
         try:
             plot_files = generate_plots(
                 results_dir=results_dir,
-                received_symbols=rx_symbols,
+                received_symbols=plot_symbols,
                 correlation=sync_correlation,
                 seed=seed,
             )
@@ -139,4 +167,6 @@ def run_pipeline(
 
     metrics["plot_files"] = plot_files
     write_metrics(metrics, metrics_path)
+    if channel_name == "rayleigh":
+        write_metrics(metrics, results_dir / "metrics_rayleigh.json")
     return metrics

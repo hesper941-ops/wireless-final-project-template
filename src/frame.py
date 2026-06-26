@@ -63,13 +63,13 @@ def build_frame(
     return PREAMBLE_BITS + int_to_bits(length, LENGTH_BITS) + payload + int_to_bits(crc, CRC_BITS)
 
 
-def parse_frame(frame_bits: list[int]) -> dict[str, object]:
+def parse_frame(frame_bits: list[int], require_preamble: bool = True) -> dict[str, object]:
     bits = [int(bit) for bit in frame_bits]
     header_len = len(PREAMBLE_BITS) + LENGTH_BITS
     min_len = header_len + CRC_BITS
     if len(bits) < min_len:
         raise ValueError("frame is too short")
-    if bits[: len(PREAMBLE_BITS)] != PREAMBLE_BITS:
+    if require_preamble and bits[: len(PREAMBLE_BITS)] != PREAMBLE_BITS:
         raise ValueError("preamble mismatch")
 
     length_start = len(PREAMBLE_BITS)

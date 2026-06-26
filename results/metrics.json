@@ -18,9 +18,14 @@
   "sync_peak_value": 1.0057317801182322,
   "failure_reason": null,
   "sync_error_symbols": 0,
+  "equalization": "none",
+  "fading_model": null,
+  "rayleigh_enabled": false,
+  "channel_estimation": "not_applicable",
   "plot_files": [
     "constellation.png",
     "ber_curve.png",
+    "ber_curve_compare.png",
     "sync_peak.png"
   ]
 }

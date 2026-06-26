@@ -399,3 +399,62 @@ Public tests note:
 Local `pytest public_tests -q` still has five remaining errors in this Windows execution environment. The errors occur when the public test fixture calls `shutil.rmtree(results)` and Windows denies deletion of `results/ber_curve.png`.
 
 This is a local filesystem permission issue during test cleanup, not a communication-chain recovery failure. The required CLI command runs successfully, and the recovered file matches `Test.txt` at byte level under the baseline SNR = 12 dB, AWGN, seed = 2026 condition.
+
+---
+
+## 11. Level 3 Extension Verification
+
+The Level 3 extension adds a flat Rayleigh fading channel, known-channel simple one-tap equalization, and AWGN-vs-Rayleigh BER comparison plotting.
+
+New tests added:
+
+```text
+Rayleigh channel reproducibility test
+One-tap equalization sanity test
+Rayleigh CLI smoke test
+```
+
+Combined local test result:
+
+```text
+pytest tests -q
+10 passed
+```
+
+The original seven Stage-1 mock tests remain included in this result and did not fail.
+
+Baseline AWGN status:
+
+```text
+python main.py --input Test.txt --output results/received.txt --snr 12 --seed 2026 --mod qpsk --channel awgn
+AWGN result: results/received.txt matched Test.txt at byte level
+BER = 0.0
+FER = 0.0
+text_match_rate = 1.0
+checksum_pass = true
+```
+
+Rayleigh smoke result at SNR = 12 dB, seed = 2026:
+
+```text
+python main.py --input Test.txt --output results/received_rayleigh.txt --snr 12 --seed 2026 --mod qpsk --channel rayleigh
+channel = rayleigh
+equalization = one-tap
+fading_model = flat_rayleigh
+BER = 0.005711488250652741
+FER = 1.0
+text_match_rate = 0.028985507246376812
+checksum_pass = false
+failure_reason = utf8_decode_error
+```
+
+This Rayleigh result is not treated as an exact recovery result. The extension runs without crashing and records the residual errors honestly. The final AWGN acceptance metrics are stored in `results/metrics.json`, while the Rayleigh extension metrics are also archived in `results/metrics_rayleigh.json`.
+
+Generated plot files include:
+
+```text
+constellation.png
+ber_curve.png
+ber_curve_compare.png
+sync_peak.png
+```

@@ -14,7 +14,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--snr", type=float, default=12.0, help="SNR in dB")
     parser.add_argument("--seed", type=int, default=2026, help="Random seed")
     parser.add_argument("--mod", default="qpsk", choices=["qpsk"], help="Modulation type")
-    parser.add_argument("--channel", default="awgn", choices=["awgn"], help="Channel type")
+    parser.add_argument("--channel", default="awgn", choices=["awgn", "rayleigh"], help="Channel type")
     parser.add_argument("--no-plots", action="store_true", help="Disable plot generation")
     return parser
 

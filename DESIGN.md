@@ -790,6 +790,57 @@ If the baseline system is stable, the following extension modules may be added f
 
 The preferred extension is Rayleigh fading channel because it is closely related to wireless communication and is easier to explain with constellation and BER comparison.
 
+## 12.1 Level 3 Extension: Rayleigh Fading and One-Tap Equalization
+
+The Level 3 implementation adds an optional Rayleigh fading channel while preserving the required AWGN baseline command.
+
+The new Rayleigh command is:
+
+```bash
+python main.py --input Test.txt --output results/received_rayleigh.txt --snr 12 --seed 2026 --mod qpsk --channel rayleigh
+```
+
+### Rayleigh Channel Model
+
+For each QPSK symbol, a complex flat Rayleigh fading coefficient is generated:
+
+```text
+h = (randn + j * randn) / sqrt(2)
+```
+
+The received signal is:
+
+```text
+r = h * s + n
+```
+
+where `s` is the transmitted QPSK symbol and `n` is complex AWGN. The random seed controls both fading and noise generation so that the experiment is reproducible.
+
+### One-Tap Equalization
+
+In the simulation, the receiver is allowed to know the fading coefficient `h`. The equalized symbol is:
+
+```text
+r_eq = r / h
+```
+
+An epsilon value is used to avoid division by zero:
+
+```text
+epsilon = 1e-12
+```
+
+For `--channel rayleigh`, one-tap equalization is enabled by default before synchronization and demodulation. For `--channel awgn`, Rayleigh fading and equalization are not used.
+
+The metrics file records the extension fields:
+
+```text
+equalization = "one-tap"
+fading_model = "flat_rayleigh"
+rayleigh_enabled = true
+channel_estimation = "known_h_simulation"
+```
+
 ---
 
 ## 13. Design Revision Record
@@ -801,3 +852,4 @@ This section should be updated after mock testing.
 | v0.1 | Initial design using PN scrambling, repetition coding, QPSK, AWGN, and preamble synchronization | Satisfy baseline PRD requirements |
 | v0.2 | To be updated after mock tests | To be filled in `MOCK_TEST_REPORT.md` |
 | v0.3 | Implemented the full end-to-end baseline pipeline. The required command generated received.txt, metrics.json, and three plots. At SNR = 12 dB, AWGN, seed = 2026, received.txt matched Test.txt at byte level with BER = 0.0, FER = 0.0, text_match_rate = 1.0, and checksum_pass = true. | Verified that the baseline design satisfies the main public acceptance condition. |
+| v0.4 | Added Level 3 Rayleigh fading channel extension with simple one-tap equalization and comparison experiment support. The baseline AWGN command remains unchanged and continues to recover Test.txt exactly under SNR = 12 dB. | Added an advanced wireless channel module while preserving the required baseline system. |

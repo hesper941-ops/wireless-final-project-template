@@ -35,6 +35,7 @@ def build_metrics(
     crc_received: int | None,
     sync_peak_value: float | None,
     failure_reason: str | None,
+    extra_fields: dict[str, object] | None = None,
 ) -> dict[str, object]:
     _, ber = compare_bits(original_bits, recovered_bits)
     match_rate = text_match_rate(original_text, recovered_text)
@@ -63,6 +64,8 @@ def build_metrics(
         metrics["sync_error_symbols"] = int(sync_start_index) - int(prefix_offset_symbols)
     else:
         metrics["sync_error_symbols"] = None
+    if extra_fields:
+        metrics.update(extra_fields)
     return metrics
 
 

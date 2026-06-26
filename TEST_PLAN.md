@@ -923,6 +923,91 @@ The following checks should be completed before pushing:
 
 ---
 
+## 9.1 Level 3 Extension Test Plan
+
+The Level 3 extension adds Rayleigh fading, simple one-tap equalization, and AWGN-vs-Rayleigh comparison plots. These tests must not change the required AWGN baseline behavior.
+
+### L3-01 Rayleigh Channel Reproducibility Test
+
+Purpose:
+
+Verify that Rayleigh fading is reproducible under a fixed seed.
+
+Steps:
+
+1. Generate a fixed QPSK symbol sequence.
+2. Run the Rayleigh fading channel with `snr_db = 12` and `seed = 2026`.
+3. Repeat the same channel call with the same seed.
+4. Compare both the received symbols and fading coefficients.
+
+Expected result:
+
+```text
+rx(seed=2026) == rx(seed=2026)
+h(seed=2026) == h(seed=2026)
+```
+
+### L3-02 One-Tap Equalization Test
+
+Purpose:
+
+Verify that known-channel one-tap equalization can invert flat fading in a noiseless sanity test.
+
+Steps:
+
+1. Generate QPSK symbols.
+2. Multiply them by known nonzero fading coefficients `h`.
+3. Apply `r_eq = r / h`.
+4. Demodulate the equalized symbols.
+
+Expected result:
+
+```text
+demodulated_bits == original_bits
+```
+
+### L3-03 AWGN vs Rayleigh Comparison Test
+
+Purpose:
+
+Verify that the project can generate comparison results for AWGN and Rayleigh + one-tap equalization.
+
+Steps:
+
+1. Run the baseline AWGN command.
+2. Run the Rayleigh command.
+3. Check that `metrics.json` records the correct channel mode and extension fields.
+4. Check that `results/ber_curve_compare.png` is generated.
+
+Expected result:
+
+The comparison plot exists and the metrics file includes:
+
+```text
+channel = "rayleigh"
+equalization = "one-tap"
+fading_model = "flat_rayleigh"
+rayleigh_enabled = true
+```
+
+### L3-04 Rayleigh CLI Smoke Test
+
+Purpose:
+
+Verify that the new Rayleigh command exits normally and writes output artifacts without hard-coding the result.
+
+Command:
+
+```bash
+python main.py --input Test.txt --output results/received_rayleigh.txt --snr 12 --seed 2026 --mod qpsk --channel rayleigh
+```
+
+Expected result:
+
+The program exits normally. If the Rayleigh channel leaves residual bit errors, the program should not force a correct output. It should record BER, FER, `checksum_pass`, `text_match_rate`, and `failure_reason` in `metrics.json`.
+
+---
+
 ## 10. Acceptance Criteria
 
 The baseline project is considered acceptable if all of the following are satisfied:
