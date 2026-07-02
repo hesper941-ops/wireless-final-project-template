@@ -29,9 +29,10 @@ def bits_to_bytes(bits: list[int]) -> bytes:
     return bytes(output)
 
 
-def source_encode(text: str) -> list[int]:
-    """Encode text to UTF-8 payload bits."""
-    return bytes_to_bits(text.encode("utf-8"))
+def source_encode(source: str | bytes) -> list[int]:
+    """Encode UTF-8 text or already-read source bytes to payload bits."""
+    data = source if isinstance(source, bytes) else source.encode("utf-8")
+    return bytes_to_bits(data)
 
 
 def source_decode(bits: list[int]) -> str:

@@ -76,10 +76,9 @@ def parse_frame(frame_bits: list[int], require_preamble: bool = True) -> dict[st
     length_end = length_start + LENGTH_BITS
     length = bits_to_int(bits[length_start:length_end])
     encoded_payload_end = length_end + length * 3
-    if encoded_payload_end + CRC_BITS <= len(bits):
-        payload_end = encoded_payload_end
-    else:
-        payload_end = len(bits) - CRC_BITS
+    if encoded_payload_end + CRC_BITS > len(bits):
+        raise ValueError("frame payload is shorter than declared length")
+    payload_end = encoded_payload_end
     payload = bits[length_end:payload_end]
     checksum = bits_to_int(bits[payload_end : payload_end + CRC_BITS])
     return {

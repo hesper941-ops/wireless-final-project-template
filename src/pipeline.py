@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 import numpy as np
@@ -33,6 +34,8 @@ def run_pipeline(
     channel: str = "awgn",
     make_plots: bool = True,
 ) -> dict[str, object]:
+    if not math.isfinite(float(snr_db)) or float(snr_db) < 0:
+        raise ValueError("snr must be a finite non-negative number")
     if modulation.lower() != "qpsk":
         raise ValueError("only qpsk modulation is supported")
     channel_name = channel.lower()
@@ -44,8 +47,15 @@ def run_pipeline(
     results_dir = output_file.parent
     metrics_path = results_dir / "metrics.json"
 
-    original_text = input_file.read_bytes().decode("utf-8")
-    payload_bits = source_encode(original_text)
+    try:
+        original_bytes = input_file.read_bytes()
+    except OSError as exc:
+        raise OSError(f"cannot read input file: {input_file}") from exc
+    try:
+        original_text = original_bytes.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise UnicodeError(f"input file is not valid UTF-8: {input_file}") from exc
+    payload_bits = source_encode(original_bytes)
     crc_expected = crc32_from_payload_bits(payload_bits)
 
     recovered_bits: list[int] = []
@@ -119,12 +129,19 @@ def run_pipeline(
         if sync_start_index != prefix_offset and failure_reason is None:
             failure_reason = "synchronization_offset_mismatch"
         if not checksum_pass and failure_reason is None:
-            failure_reason = "checksum_failed"
+            failure_reason = "crc_failed"
         if recovered_text != original_text and failure_reason is None:
             failure_reason = "text_mismatch"
     except Exception as exc:  # low-SNR runs should still produce artifacts
         recovered_text = ""
-        failure_reason = f"{type(exc).__name__}: {exc}"
+        if isinstance(exc, UnicodeDecodeError):
+            failure_reason = "utf8_decode_error"
+        elif "preamble" in str(exc).lower() or "sync" in str(exc).lower():
+            failure_reason = "sync_failed"
+        elif "crc" in str(exc).lower() or "checksum" in str(exc).lower():
+            failure_reason = "crc_failed"
+        else:
+            failure_reason = f"decode_failed: {exc}"
 
     output_file.write_bytes(recovered_text.encode("utf-8"))
 

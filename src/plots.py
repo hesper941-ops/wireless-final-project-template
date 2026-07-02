@@ -115,7 +115,8 @@ def plot_ber_curve_compare(path: str | Path, seed: int = 2026) -> None:
     bits = [int(x) for x in rng.integers(0, 2, size=6000)]
     tx = qpsk_modulate(bits)
     awgn_ber: list[float] = []
-    rayleigh_ber: list[float] = []
+    rayleigh_raw_ber: list[float] = []
+    rayleigh_equalized_ber: list[float] = []
     for snr in snr_points:
         awgn_rx = awgn(tx, float(snr), seed=seed + int(snr) + 6000)
         awgn_bits = qpsk_demodulate(awgn_rx)[: len(bits)]
@@ -123,16 +124,25 @@ def plot_ber_curve_compare(path: str | Path, seed: int = 2026) -> None:
         awgn_ber.append(awgn_errors / len(bits))
 
         rayleigh_rx, h = rayleigh_fading_channel(tx, float(snr), seed=seed + int(snr) + 7000)
+        raw_bits = qpsk_demodulate(rayleigh_rx)[: len(bits)]
+        raw_errors = sum(1 for left, right in zip(bits, raw_bits) if left != right)
+        rayleigh_raw_ber.append(raw_errors / len(bits))
         equalized = one_tap_equalize(rayleigh_rx, h)
         rayleigh_bits = qpsk_demodulate(equalized)[: len(bits)]
         rayleigh_errors = sum(1 for left, right in zip(bits, rayleigh_bits) if left != right)
-        rayleigh_ber.append(rayleigh_errors / len(bits))
+        rayleigh_equalized_ber.append(rayleigh_errors / len(bits))
 
     fig, ax = plt.subplots(figsize=(7, 4), dpi=120)
     ax.semilogy(snr_points, np.maximum(awgn_ber, 1e-5), marker="o", label="AWGN")
     ax.semilogy(
         snr_points,
-        np.maximum(rayleigh_ber, 1e-5),
+        np.maximum(rayleigh_raw_ber, 1e-5),
+        marker="^",
+        label="Rayleigh without EQ",
+    )
+    ax.semilogy(
+        snr_points,
+        np.maximum(rayleigh_equalized_ber, 1e-5),
         marker="s",
         label="Rayleigh + one-tap EQ",
     )
